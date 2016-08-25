@@ -16,10 +16,12 @@ public class MainActivity extends AppCompatActivity
     private final String TAG = MainActivity.class.getSimpleName();
     private RetainedFragment retainedFragment;
     private ImageView myImage;
-    private TextView feedback;
+    private TextView feedback, operation;
     private ProgressBar progressBar;
     private WorkerThread workerThread;
     private Handler uiHandler;
+
+    private final String KEY_IMAGE = "image-view";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         myImage = (ImageView) findViewById(R.id.myimage);
         feedback = (TextView) findViewById(R.id.feedback);
+        operation = (TextView) findViewById(R.id.operation);
 
         btn1.setOnClickListener(this);
         btn2.setOnClickListener(this);
@@ -102,17 +105,17 @@ public class MainActivity extends AppCompatActivity
         retainedFragment.putObj(KEY_IMAGE, bitmap);
     }
 
-    private final String KEY_IMAGE = "image-view";
-
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_1: {
                 postRunnable();
+                break;
             }
 
             case R.id.btn_2: {
                 sendMessage();
+                break;
             }
         }
     }
@@ -137,6 +140,8 @@ public class MainActivity extends AppCompatActivity
 
     private void sendMessage() {
         Log.d(TAG, "sendMessage()");
+        initWorkerThread();
+        workerThread.sendMessage();
     }
 
     public void showToast(String msg) {
@@ -148,6 +153,12 @@ public class MainActivity extends AppCompatActivity
     public void showFeedbackText(String msg) {
         Log.d(TAG, "showFeedbackText("+msg+")");
         feedback.setText(msg);
+    }
+
+    @Override
+    public void showOperation(String msg) {
+        Log.d(TAG, "showOperation("+msg+")");
+        operation.setText(msg);
     }
 
     @Override

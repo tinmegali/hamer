@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -66,12 +68,13 @@ public class WorkerThread extends HandlerThread {
     // post a Runnable to the current Thread
     public void postRunnable() {
         Log.d(TAG, "postRunnable()");
+        showOperationOnUI("Posting Runnable");
         handler.post(new Runnable() {
             @Override
             public void run() {
                 try {
                     showProgress();
-                    showFeedbackOnUI("downloading...");
+                    showFeedbackOnUI("Executing operation...");
                     // sleeps for 2 seconds to emulate long running operation
                     TimeUnit.SECONDS.sleep(2);
                     downloadImage(imageAUrl);
@@ -79,13 +82,42 @@ public class WorkerThread extends HandlerThread {
                     e.printStackTrace();
                 }
                 hideProgress();
+                showOperationOnUI("Runnable operation ended");
             }
         });
     }
 
+
+    private final int MSG_DOWNLOAD_IMG = 0;
+
     // send a Message to the current Thread
     public void sendMessage(){
+        Log.d(TAG, "sendMessage()");
+        showOperationOnUI("Sending Message...");
+        HandlerMessage handlerMessage = new HandlerMessage(getLooper());
+        Message message = Message.obtain(handlerMessage,MSG_DOWNLOAD_IMG,imageBUrl);
+        handlerMessage.sendMessage(message);
+    }
 
+    public class HandlerMessage extends Handler {
+        public HandlerMessage(Looper looper) {
+            super(looper);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            showProgress();
+            switch ( msg.what ) {
+                case MSG_DOWNLOAD_IMG: {
+                    String url = (String) msg.obj;
+                    showFeedbackOnUI("Executing operation...");
+                    downloadImage(url);
+                    break;
+                }
+            }
+            hideProgress();
+            showOperationOnUI("Message handled");
+        }
     }
 
     // Download an image
@@ -123,6 +155,23 @@ public class WorkerThread extends HandlerThread {
                         @Override
                         public void run() {
                             callback.get().showFeedbackText(msg);
+                        }
+                    }
+            );
+        } else {
+            Log.w(TAG, "responseHandler unavailable");
+        }
+    }
+    // sends a feedback to the ui
+    // posting a Runnable to the responseHandler
+    private void showOperationOnUI(final String msg) {
+        Log.d(TAG, "showOperationOnUI(" + msg + ")");
+        if ( checkResponse() ) {
+            responseHandler.get().post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.get().showOperation(msg);
                         }
                     }
             );
@@ -180,6 +229,7 @@ public class WorkerThread extends HandlerThread {
 
     public interface Callback {
         void showFeedbackText(String msg);
+        void showOperation(String msg);
         void loadImage(Bitmap image);
         void showProgress(boolean show);
     }
