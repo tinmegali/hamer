@@ -1,27 +1,38 @@
 package com.tinmegali.hamer;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
 import com.tinmegali.hamer.util.RetainedFragment;
 
-public class MainActivity extends AppCompatActivity
+public class RunnableActivity extends AppCompatActivity
         implements View.OnClickListener, WorkerThread.Callback {
 
-    private final String TAG = MainActivity.class.getSimpleName();
-    private RetainedFragment retainedFragment;
-    private ImageView myImage;
-    private TextView feedback, operation;
-    private ProgressBar progressBar;
-    private WorkerThread workerThread;
-    private Handler uiHandler;
+    public static Intent getNavIntent(Context context){
+        Intent intent = new Intent(context, RunnableActivity.class);
+        return intent;
+    }
 
-    private final String KEY_IMAGE = "image-view";
+    private final String TAG = RunnableActivity.class.getSimpleName();
+    public RetainedFragment retainedFragment;
+    protected ImageView myImage;
+
+    protected TextView feedback, operation;
+    protected ProgressBar progressBar;
+    protected WorkerThread workerThread;
+    protected Handler uiHandler;
+
+    protected final String KEY_IMAGE = "image-view";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,19 +40,43 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         Button btn1 = (Button) findViewById(R.id.btn_1);
-        Button btn2 = (Button) findViewById(R.id.btn_2);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         myImage = (ImageView) findViewById(R.id.myimage);
         feedback = (TextView) findViewById(R.id.feedback);
         operation = (TextView) findViewById(R.id.operation);
 
         btn1.setOnClickListener(this);
-        btn2.setOnClickListener(this);
 
         uiHandler = new Handler();
 
         startFragRetainer();
         recoverData();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.runnables).setEnabled(false);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch ( item.getItemId() ) {
+            case R.id.messages:{
+                startActivity(MessageActivity.getNavIntent(this));
+                return true;
+            }
+
+            default:
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
@@ -55,18 +90,21 @@ public class MainActivity extends AppCompatActivity
         super.onDestroy();
         if (isChangingConfigurations()) {
             Log.d(TAG, "onDestroy() - changing configurations...");
-            workerThread.onDestroy();
+            if ( workerThread != null )
+                workerThread.onDestroy();
         } else {
             Log.d(TAG, "onDestroy()");
-            workerThread.onDestroy();
-            workerThread.quit();
+            if ( workerThread != null ) {
+                workerThread.onDestroy();
+                workerThread.quit();
+            }
         }
 
     }
 
     // starts a FragmentRetainer instance
     // or recover if already exists
-    private void startFragRetainer(){
+    public void startFragRetainer(){
         Log.d(TAG, "startFragRetainer()");
         retainedFragment = (RetainedFragment) getFragmentManager()
                 .findFragmentByTag(RetainedFragment.TAG);
@@ -79,7 +117,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     // recover all data saved on retainedFragment
-    private void recoverData(){
+    protected void recoverData(){
         Log.d(TAG, "recoverData()");
         workerThread = (WorkerThread) retainedFragment.getObj(WorkerThread.TAG);
         if( workerThread != null){
@@ -97,12 +135,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     // saves all persistent data on retainedFragment
-    private void saveData(){
+    protected void saveData(){
         Log.d(TAG, "saveData()");
         retainedFragment.putObj(WorkerThread.TAG, workerThread);
         retainedFragment.putObj(Integer.toString(feedback.getId()), feedback.getText());
-        Bitmap bitmap = ((BitmapDrawable)myImage.getDrawable()).getBitmap();
-        retainedFragment.putObj(KEY_IMAGE, bitmap);
+        if ( myImage.getDrawable() != null ) {
+            Bitmap bitmap = ((BitmapDrawable) myImage.getDrawable()).getBitmap();
+            retainedFragment.putObj(KEY_IMAGE, bitmap);
+        }
     }
 
     @Override
@@ -112,16 +152,11 @@ public class MainActivity extends AppCompatActivity
                 postRunnable();
                 break;
             }
-
-            case R.id.btn_2: {
-                sendMessage();
-                break;
-            }
         }
     }
 
     // initialized WorkerThread
-    private void initWorkerThread(){
+    public void initWorkerThread(){
         Log.d(TAG, "initWorkerThread()");
         if ( workerThread == null ) {
             workerThread = new WorkerThread(uiHandler, this);
@@ -136,12 +171,6 @@ public class MainActivity extends AppCompatActivity
 
         initWorkerThread();
         workerThread.postRunnable();
-    }
-
-    private void sendMessage() {
-        Log.d(TAG, "sendMessage()");
-        initWorkerThread();
-        workerThread.sendMessage();
     }
 
     public void showToast(String msg) {

@@ -13,11 +13,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.net.URL;
 
 /**
  * Created by tinmegali on 24/08/16.
+ *
+ * All imagesUrls from https://pixabay.com/
  */
 public class WorkerThread extends HandlerThread {
 
@@ -31,6 +34,13 @@ public class WorkerThread extends HandlerThread {
             "https://pixabay.com/static/uploads/photo/2016/08/05/18/28/mobile-phone-1572901_960_720.jpg";
     private final String imageBUrl =
             "https://pixabay.com/static/uploads/photo/2015/01/20/13/13/ipad-605439_960_720.jpg";
+
+    private final String[] imagesUrls = new String[]{
+            "https://pixabay.com/static/uploads/photo/2015/08/07/00/41/lg-878843_960_720.jpg",
+            "https://pixabay.com/static/uploads/photo/2015/11/28/21/47/iphone-1067983_960_720.jpg",
+            "https://pixabay.com/static/uploads/photo/2014/09/26/22/53/tablet-462950_960_720.png",
+            "https://pixabay.com/static/uploads/photo/2015/08/07/00/41/lg-878845_960_720.jpg"
+    };
 
 
     // constructor receives a responseHandler (probably and uiHandler)
@@ -89,13 +99,25 @@ public class WorkerThread extends HandlerThread {
 
 
     private final int MSG_DOWNLOAD_IMG = 0;
+    private final int MSG_DOWNLOAD_RANDOM_IMG = 1;
 
     // send a Message to the current Thread
-    public void sendMessage(){
-        Log.d(TAG, "sendMessage()");
+    // and download a single image
+    public void downloadWithMessage(){
+        Log.d(TAG, "downloadWithMessage()");
         showOperationOnUI("Sending Message...");
         HandlerMessage handlerMessage = new HandlerMessage(getLooper());
-        Message message = Message.obtain(handlerMessage,MSG_DOWNLOAD_IMG,imageBUrl);
+        Message message = Message.obtain(handlerMessage, MSG_DOWNLOAD_IMG,imageBUrl);
+        handlerMessage.sendMessage(message);
+    }
+
+    // send a Message to the current Thread
+    // and download a random image
+    public void downloadRandomWithMessage(){
+        Log.d(TAG, "downloadRandomWithMessage()");
+        showOperationOnUI("Sending Message...");
+        HandlerMessage handlerMessage = new HandlerMessage(getLooper());
+        Message message = Message.obtain(handlerMessage, MSG_DOWNLOAD_RANDOM_IMG, imagesUrls);
         handlerMessage.sendMessage(message);
     }
 
@@ -109,10 +131,20 @@ public class WorkerThread extends HandlerThread {
             showProgress();
             switch ( msg.what ) {
                 case MSG_DOWNLOAD_IMG: {
+                    // receives a single url and download it
                     String url = (String) msg.obj;
                     showFeedbackOnUI("Executing operation...");
                     downloadImage(url);
                     break;
+                }
+                case MSG_DOWNLOAD_RANDOM_IMG: {
+                    // receives a String[] with multiple urls
+                    // download a image randomly
+                    String[] urls = (String[]) msg.obj;
+                    Random random = new Random();
+                    String url = urls[random.nextInt(urls.length)];
+                    downloadImage(url);
+                    showFeedbackOnUI("Executing random download");
                 }
             }
             hideProgress();

@@ -26,11 +26,18 @@
                 android:layout_centerInParent="true"
                 android:visibility="gone"
                 android:id="@+id/progressBar"/>
+
     </RelativeLayout>
 
     <Button
             android:id="@+id/btn_1"
-            android:text="Post Runnable"
+            android:text="Download Image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    <Button
+            android:id="@+id/btn_2"
+            android:text="Download Random Image"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
