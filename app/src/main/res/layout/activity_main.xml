@@ -11,6 +11,17 @@
         android:orientation="vertical"
         tools:context="com.tinmegali.hamer.MainActivity">
 
+    <ProgressBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:id="@+id/progressBar"/>
+
+    <ImageView
+            android:id="@+id/myimage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
     <Button
             android:id="@+id/btn_1"
             android:text="Post Runnable"
