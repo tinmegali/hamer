@@ -13,6 +13,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
+import com.tinmegali.hamer.util.BaseActivity;
 import com.tinmegali.hamer.util.RetainedFragment;
 
 /**
@@ -32,7 +33,7 @@ import com.tinmegali.hamer.util.RetainedFragment;
  * a {@link Runnable} using the {@link Handler} sent to the bg thread
  * by this Activity.
  */
-public class RunnableActivity extends AppCompatActivity
+public class RunnableActivity extends BaseActivity
         implements View.OnClickListener, WorkerThread.Callback {
 
     // Create a Intent to navigate to this Activity
@@ -43,15 +44,6 @@ public class RunnableActivity extends AppCompatActivity
 
     private final String TAG = RunnableActivity.class.getSimpleName();
 
-    // Fragment to retain some data during configuration changes
-    public RetainedFragment retainedFragment;
-
-    // Holds the image downloaded by the WorkerThread
-    protected ImageView myImage;
-
-    protected TextView feedback, operation;
-    protected ProgressBar progressBar;
-
     // BackgroundTread responsible to download the Image
     protected WorkerThread workerThread;
 
@@ -59,20 +51,13 @@ public class RunnableActivity extends AppCompatActivity
     // the WorkerThread and the Activity
     protected Handler uiHandler;
 
-    // RetainedFragment keys
-    protected final String KEY_IMAGE = "image-view";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initBasicUI();
         Button btn1 = (Button) findViewById(R.id.btn_1);
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        myImage = (ImageView) findViewById(R.id.myimage);
-        feedback = (TextView) findViewById(R.id.feedback);
-        operation = (TextView) findViewById(R.id.operation);
-
         btn1.setOnClickListener(this);
 
         uiHandler = new Handler();
@@ -80,97 +65,23 @@ public class RunnableActivity extends AppCompatActivity
         recoverData();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.runnables).setEnabled(false);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch ( item.getItemId() ) {
-            case R.id.messages:{
-                startActivity(MessageActivity.getNavIntent(this));
-                return true;
-            }
-
-            default:
-            return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        saveData();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Informs the workerThread about destruction events
-        if (isChangingConfigurations()) {
-            Log.d(TAG, "onDestroy() - changing configurations...");
-            if ( workerThread != null )
-                workerThread.onDestroy();
-        } else {
-            Log.d(TAG, "onDestroy()");
-            if ( workerThread != null ) {
-                workerThread.onDestroy();
-                workerThread.quit();
-            }
-        }
-
-    }
-
-    // starts a FragmentRetainer instance
-    // or recover if already exists
-    public void startFragRetainer(){
-        Log.d(TAG, "startFragRetainer()");
-        retainedFragment = (RetainedFragment) getFragmentManager()
-                .findFragmentByTag(RetainedFragment.TAG);
-        if ( retainedFragment == null ) {
-            retainedFragment = new RetainedFragment();
-            getFragmentManager().beginTransaction()
-                    .add(retainedFragment, RetainedFragment.TAG)
-                    .commit();
-        }
-    }
-
     // recover all data saved on retainedFragment
+    @Override
     protected void recoverData(){
-        Log.d(TAG, "recoverData()");
+        super.recoverData();
         workerThread = (WorkerThread) retainedFragment.getObj(WorkerThread.TAG);
         if( workerThread != null){
             workerThread.setCallback(this);
             workerThread.setResponseHandler(uiHandler);
         }
-        String fdbText = (String) retainedFragment.getObj(Integer.toString(feedback.getId()));
-        if ( fdbText != null )
-            feedback.setText( fdbText );
-
-        Bitmap bitmap = (Bitmap) retainedFragment.getObj(KEY_IMAGE);
-        if ( bitmap != null )
-            myImage.setImageBitmap( bitmap );
-
     }
 
     // saves all persistent data on retainedFragment
+    @Override
     protected void saveData(){
         Log.d(TAG, "saveData()");
+        super.saveData();
         retainedFragment.putObj(WorkerThread.TAG, workerThread);
-        retainedFragment.putObj(Integer.toString(feedback.getId()), feedback.getText());
-        if ( myImage.getDrawable() != null ) {
-            Bitmap bitmap = ((BitmapDrawable) myImage.getDrawable()).getBitmap();
-            retainedFragment.putObj(KEY_IMAGE, bitmap);
-        }
     }
 
     @Override
@@ -182,8 +93,6 @@ public class RunnableActivity extends AppCompatActivity
             }
         }
     }
-
-    // initialized WorkerThread
 
     /**
      * Initialize the {@link WorkerThread} instance
@@ -197,8 +106,6 @@ public class RunnableActivity extends AppCompatActivity
             workerThread.prepareHandler();
         }
     }
-
-    // post a Runnable on the WorkingThread
 
     /**
      * Starts the downloading process

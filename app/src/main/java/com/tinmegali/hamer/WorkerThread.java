@@ -92,6 +92,12 @@ public class WorkerThread extends HandlerThread {
         this.callback = new WeakReference<>(callback);
     }
 
+    // TODO comment
+    public WorkerThread(Handler responseHandler){
+        super(TAG);
+        this.responseHandler = new WeakReference<>(responseHandler);
+    }
+
     /**
      * Hook method called from the uiThread
      * responsible to null ui references
@@ -172,13 +178,13 @@ public class WorkerThread extends HandlerThread {
     private final int MSG_DOWNLOAD_RANDOM_IMG = 1;  // msg that download random img
 
     /**
-     * send a Message to the current Thread
+     * sends a Message to the current Thread
      * using the {@link #handlerImgDownload}
      * to download a single image.
      */
     public void downloadWithMessage(){
         Log.d(TAG, "downloadWithMessage()");
-        showOperationOnUI("Sending Message...");
+        showOperationOnUIMSG("Sending Message...");
         if ( handlerImgDownload == null )
             handlerImgDownload = new HandlerImgDownload(getLooper());
         Message message = Message.obtain(handlerImgDownload, MSG_DOWNLOAD_IMG,imageBUrl);
@@ -186,13 +192,13 @@ public class WorkerThread extends HandlerThread {
     }
 
     /**
-     * send a Message to the current Thread
+     * sends a Message to the current Thread
      * using the {@link #handlerImgDownload}
      * to download a random image.
      */
     public void downloadRandomWithMessage(){
         Log.d(TAG, "downloadRandomWithMessage()");
-        showOperationOnUI("Sending Message...");
+        showOperationOnUIMSG("Sending Message...");
         if ( handlerImgDownload == null )
             handlerImgDownload = new HandlerImgDownload(getLooper());
         Message message = Message.obtain(handlerImgDownload, MSG_DOWNLOAD_RANDOM_IMG, imagesUrls);
@@ -213,13 +219,13 @@ public class WorkerThread extends HandlerThread {
 
         @Override
         public void handleMessage(Message msg) {
-            showProgress();
+            showProgressMSG(true);
             switch ( msg.what ) {
                 case MSG_DOWNLOAD_IMG: {
                     // receives a single url and download it
                     String url = (String) msg.obj;
-                    showFeedbackOnUI("Executing operation...");
-                    downloadImage(url);
+                    showFeedbackOnUIMSG("Executing operation...");
+                    downloadImageMSG(url);
                     break;
                 }
                 case MSG_DOWNLOAD_RANDOM_IMG: {
@@ -228,12 +234,12 @@ public class WorkerThread extends HandlerThread {
                     String[] urls = (String[]) msg.obj;
                     Random random = new Random();
                     String url = urls[random.nextInt(urls.length)];
-                    downloadImage(url);
-                    showFeedbackOnUI("Executing random download");
+                    downloadImageMSG(url);
+                    showFeedbackOnUIMSG("Executing random download");
                 }
             }
-            hideProgress();
-            showOperationOnUI("Message handled");
+            showProgressMSG(false);
+            showOperationOnUIMSG("Message handled");
         }
     }
 
@@ -259,6 +265,34 @@ public class WorkerThread extends HandlerThread {
                 showFeedbackOnUI("Image downloaded");
             } else {
                 showFeedbackOnUI("Error downloading image");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if ( connection != null )
+                connection.disconnect();
+        }
+    }
+
+    //TODO comment
+    private void downloadImageMSG(String urlStr){
+        Log.d(TAG, "downloadImage()");
+
+        // Create a connection
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(urlStr);
+            connection = (HttpURLConnection) url.openConnection();
+
+            // get the stream from the url
+            InputStream in = new BufferedInputStream(connection.getInputStream());
+            final Bitmap bitmap = BitmapFactory.decodeStream(in);
+            if ( bitmap != null ) {
+                // send the bitmap downloaded and a feedback to the UI
+                loadImageOnUIMSG( bitmap );
+                showFeedbackOnUIMSG("Image downloaded");
+            } else {
+                showFeedbackOnUIMSG("Error downloading image");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -305,14 +339,14 @@ public class WorkerThread extends HandlerThread {
                 // Ticking message
                 case CounterThread.KEY_MSG_TICK: {
                     long time = (long) msg.obj;
-                    showFeedbackOnUI("Time remaining: " + Long.toString(time));
-                    showProgress();
+                    showFeedbackOnUIMSG("Time remaining: " + Long.toString(time));
+                    showProgressMSG(true);
                     break;
                 }
                 // Done message
                 case CounterThread.KEY_MSG_DONE: {
-                    showFeedbackOnUI("Timer is done!");
-                    hideProgress();
+                    showFeedbackOnUIMSG("Timer is done!");
+                    showProgressMSG(false);
                     break;
                 }
             }
@@ -340,6 +374,18 @@ public class WorkerThread extends HandlerThread {
         }
     }
 
+    // TODO comment
+    private void showFeedbackOnUIMSG(final String msg) {
+        Log.d(TAG, "showFeedbackOnUI(" + msg + ")");
+        if ( checkResponse() ) {
+            sendMsgToUI(
+                    responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_FEEDBACK, msg)
+            );
+        } else {
+            Log.w(TAG, "responseHandler unavailable");
+        }
+    }
+
     /**
      * sends a feedback to the ui
      * posting a Runnable to the {@link #responseHandler}
@@ -355,6 +401,28 @@ public class WorkerThread extends HandlerThread {
                             callback.get().showOperation(msg);
                         }
                     }
+            );
+        } else {
+            Log.w(TAG, "responseHandler unavailable");
+        }
+    }
+
+    // TODO comment
+    private void sendMsgToUI(Message msg){
+        Log.d(TAG, "sendMsgToUI("+msg+")");
+        if (checkResponse()){
+            responseHandler.get().sendMessage(msg);
+        }
+    }
+
+    // TODO comment
+    private void showOperationOnUIMSG(final String msg) {
+        Log.d(TAG, "showOperationOnUIMSG(" + msg + ")");
+        if ( checkResponse() ) {
+            sendMsgToUI(
+                    responseHandler.get().obtainMessage(
+                            MessageActivity.KEY_MSG_FEEDBACK_OP, msg
+                    )
             );
         } else {
             Log.w(TAG, "responseHandler unavailable");
@@ -379,6 +447,15 @@ public class WorkerThread extends HandlerThread {
             );
         }
     }
+    // TODO comment
+    private void loadImageOnUIMSG(final Bitmap image){
+        Log.d(TAG, "loadImageOnUI("+image+")");
+        if (checkResponse() ) {
+            sendMsgToUI(
+                    responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_IMAGE, image)
+            );
+        }
+    }
 
     /**
      * Show progressBar on the UI.
@@ -397,6 +474,16 @@ public class WorkerThread extends HandlerThread {
                             callback.get().showProgress(true);
                         }
                     }
+            );
+        }
+    }
+
+    // TODO comment
+    private void showProgressMSG(boolean show){
+        Log.d(TAG, "showProgressMSG()");
+        if ( checkResponse() ) {
+            sendMsgToUI(
+                    responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_PROGRESS, show)
             );
         }
     }

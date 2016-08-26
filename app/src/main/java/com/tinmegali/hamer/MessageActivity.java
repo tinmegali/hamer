@@ -2,7 +2,10 @@ package com.tinmegali.hamer;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -12,9 +15,26 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import com.tinmegali.hamer.util.BaseActivity;
 
-public class MessageActivity extends RunnableActivity {
+/**
+ * Activity that illustrate the use of {@link android.os.Message} objects.
+ *
+ * It calls methods on the {@link WorkerThread} to download a image,
+ * download a random image or start a count down counter.
+ *
+ * All those tasks are done on the {@link #workerThread} using
+ * Message objects called asynchronously on the thread.
+ *
+ * The results are sent back to the Activity using the {@link #uiHandler}
+ * passed to the {@link WorkerThread} during its constructions or
+ * after configuration changes. {@link Runnable} objects are posted
+ * to the {@link #uiHandler} using the {@link com.tinmegali.hamer.WorkerThread.Callback}
+ * implemented by the Activity
+ */
+public class MessageActivity extends BaseActivity {
 
+    // Create a Intent to navigate to this Activity
     public static Intent getNavIntent(Context context){
         Intent intent = new Intent(context, MessageActivity.class);
         return intent;
@@ -22,15 +42,19 @@ public class MessageActivity extends RunnableActivity {
 
     private final String TAG = MessageActivity.class.getSimpleName();
 
+    // BackgroundTread responsible to download the Image
+    protected WorkerThread workerThread;
+
+    // Handler that allows communication between
+    // the WorkerThread and the Activity
+    protected MessageHandler uiHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message);
 
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        myImage = (ImageView) findViewById(R.id.myimage);
-        feedback = (TextView) findViewById(R.id.feedback);
-        operation = (TextView) findViewById(R.id.operation);
+        initBasicUI();
 
         Button btn = (Button) findViewById(R.id.btn_1);
         Button btn2 = (Button) findViewById(R.id.btn_2);
@@ -39,21 +63,9 @@ public class MessageActivity extends RunnableActivity {
         btn2.setOnClickListener(this);
         btn3.setOnClickListener(this);
 
+        uiHandler = new MessageHandler();
         startFragRetainer();
         recoverData();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate( R.menu.menu_main, menu );
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.messages).setEnabled(false);
-        return true;
     }
 
     @Override
@@ -110,6 +122,23 @@ public class MessageActivity extends RunnableActivity {
         }
     }
 
+    /**
+     * Initialize the {@link WorkerThread} instance
+     * only if hasn't been initialized yet.
+     */
+    public void initWorkerThread(){
+        Log.d(TAG, "initWorkerThread()");
+        if ( workerThread == null ) {
+            workerThread = new WorkerThread(uiHandler);
+            workerThread.start();
+            workerThread.prepareHandler();
+        }
+    }
+
+    /**
+     * Asks the {@link #workerThread} to start
+     * downloading a Image.
+     */
     private void downloadImage() {
         Log.d(TAG, "downloadWithMessage()");
         initWorkerThread();
@@ -126,5 +155,49 @@ public class MessageActivity extends RunnableActivity {
         Log.d(TAG, "startCounter()");
         initWorkerThread();
         workerThread.startTimer(10000, 1000);
+    }
+
+    // Message identifier used on Message.what() field
+    public static final int KEY_MSG_FEEDBACK = 0;
+    public static final int KEY_MSG_FEEDBACK_OP = 1;
+    public static final int KEY_MSG_IMAGE = 2;
+    public static final int KEY_MSG_PROGRESS = 3;
+
+    /**
+     * Handler responsible to manage communication
+     * from the {@link WorkerThread}. It sends Messages
+     * back to the {@link MessageActivity} and handle
+     * those Messages
+     */
+    public class MessageHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                // handle feedback text
+                case KEY_MSG_FEEDBACK:{
+                    feedback.setText((String) msg.obj);
+                    break;
+                }
+                // handle feedback operation
+                case KEY_MSG_FEEDBACK_OP:{
+                    operation.setText((String) msg.obj);
+                    break;
+                }
+                // handle image
+                case KEY_MSG_IMAGE:{
+                    Bitmap bmp = (Bitmap) msg.obj;
+                    myImage.setImageBitmap(bmp);
+                    break;
+                }
+                // handle progressBar calls
+                case KEY_MSG_PROGRESS: {
+                    if ( (boolean) msg.obj )
+                        progressBar.setVisibility(View.VISIBLE);
+                    else
+                        progressBar.setVisibility(View.GONE);
+                    break;
+                }
+            }
+        }
     }
 }
