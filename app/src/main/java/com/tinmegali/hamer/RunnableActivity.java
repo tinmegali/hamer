@@ -167,10 +167,10 @@ public class RunnableActivity extends AppCompatActivity
 
     // post a Runnable on the WorkingThread
     private void postRunnable() {
-        Log.d(TAG, "postRunnable()");
+        Log.d(TAG, "downloadWithRunnable()");
 
         initWorkerThread();
-        workerThread.postRunnable();
+        workerThread.downloadWithRunnable();
     }
 
     public void showToast(String msg) {
