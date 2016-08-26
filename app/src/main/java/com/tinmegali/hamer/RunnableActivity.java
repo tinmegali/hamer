@@ -15,23 +15,51 @@ import android.view.View;
 import android.widget.*;
 import com.tinmegali.hamer.util.RetainedFragment;
 
+/**
+ * Activity that illustrates the use of posting {@link Runnable}
+ *
+ * It creates a background Thread using {@link WorkerThread}
+ * via {@link Handler}.
+ *
+ * calls a event {@link #downloadImgWithRunnable()}
+ * who post a Runnable to the {@link #workerThread} using
+ * and send back the image download to the Activity using
+ * the {@link #uiHandler} give to the {@link #workerThread}
+ *
+ * The Activity implement {@link com.tinmegali.hamer.WorkerThread.Callback}
+ * a callback that gives UI methods to the UI Thread.
+ * Although those methods can only be accessed by posting
+ * a {@link Runnable} using the {@link Handler} sent to the bg thread
+ * by this Activity.
+ */
 public class RunnableActivity extends AppCompatActivity
         implements View.OnClickListener, WorkerThread.Callback {
 
+    // Create a Intent to navigate to this Activity
     public static Intent getNavIntent(Context context){
         Intent intent = new Intent(context, RunnableActivity.class);
         return intent;
     }
 
     private final String TAG = RunnableActivity.class.getSimpleName();
+
+    // Fragment to retain some data during configuration changes
     public RetainedFragment retainedFragment;
+
+    // Holds the image downloaded by the WorkerThread
     protected ImageView myImage;
 
     protected TextView feedback, operation;
     protected ProgressBar progressBar;
+
+    // BackgroundTread responsible to download the Image
     protected WorkerThread workerThread;
+
+    // Handler that allows communication between
+    // the WorkerThread and the Activity
     protected Handler uiHandler;
 
+    // RetainedFragment keys
     protected final String KEY_IMAGE = "image-view";
 
     @Override
@@ -48,7 +76,6 @@ public class RunnableActivity extends AppCompatActivity
         btn1.setOnClickListener(this);
 
         uiHandler = new Handler();
-
         startFragRetainer();
         recoverData();
     }
@@ -88,6 +115,7 @@ public class RunnableActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // Informs the workerThread about destruction events
         if (isChangingConfigurations()) {
             Log.d(TAG, "onDestroy() - changing configurations...");
             if ( workerThread != null )
@@ -149,13 +177,18 @@ public class RunnableActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_1: {
-                postRunnable();
+                downloadImgWithRunnable();
                 break;
             }
         }
     }
 
     // initialized WorkerThread
+
+    /**
+     * Initialize the {@link WorkerThread} instance
+     * only if hasn't been initialized yet.
+     */
     public void initWorkerThread(){
         Log.d(TAG, "initWorkerThread()");
         if ( workerThread == null ) {
@@ -166,36 +199,52 @@ public class RunnableActivity extends AppCompatActivity
     }
 
     // post a Runnable on the WorkingThread
-    private void postRunnable() {
+
+    /**
+     * Starts the downloading process
+     * on the {@link WorkerThread#downloadWithRunnable()}
+     */
+    private void downloadImgWithRunnable() {
         Log.d(TAG, "downloadWithRunnable()");
 
         initWorkerThread();
         workerThread.downloadWithRunnable();
     }
 
-    public void showToast(String msg) {
-        Log.d(TAG, "showToast("+msg+")");
-        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-    }
-
+    /**
+     * Callback from {@link WorkerThread}
+     * Shows a feedback text on {@link #feedback}
+     */
     @Override
     public void showFeedbackText(String msg) {
         Log.d(TAG, "showFeedbackText("+msg+")");
         feedback.setText(msg);
     }
 
+    /**
+     * Callback from {@link WorkerThread}
+     * Shows a feedback text on {@link #operation}
+     */
     @Override
     public void showOperation(String msg) {
         Log.d(TAG, "showOperation("+msg+")");
         operation.setText(msg);
     }
 
+    /**
+     * Callback from {@link WorkerThread}
+     * Shows a image on the {@link #myImage}
+     */
     @Override
     public void loadImage(Bitmap image) {
         Log.d(TAG, "loadImage("+image+")");
         myImage.setImageBitmap(image);
     }
 
+    /**
+     * Callback from {@link WorkerThread}
+     * Show/Hide {@link #progressBar}
+     */
     @Override
     public void showProgress(boolean show) {
         Log.d(TAG, "showProgress("+show+")");
