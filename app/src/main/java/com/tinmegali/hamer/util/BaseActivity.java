@@ -15,7 +15,8 @@ import com.tinmegali.hamer.MessageActivity;
 import com.tinmegali.hamer.R;
 
 /**
- * Created by tinmegali on 26/08/16.
+ * Base Activity with some helper methods and the basic UI.
+ * It also initializes a FragmentRetainer and saves the UI states on it
  */
 public abstract class BaseActivity extends AppCompatActivity implements View.OnClickListener {
 

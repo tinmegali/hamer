@@ -27,8 +27,7 @@ import java.net.URL;
  * {@link #postHandler}     responsible only to post Runnable to the WorkerThread
  *
  * {@link #responseHandler} Handler received from the {@link MessageActivity} and {@link RunnableActivity}
- *                          responsible to receive Runnable calls that will be processed
- *                          on the UI. The {@link #callback} will help on this process.
+ *                          responsible to post/send Runnable/Message on the UI.
  *
  * {@link #handlerImgDownload}  send and processes download Messages on the WorkerThread
  *
@@ -92,7 +91,11 @@ public class WorkerThread extends HandlerThread {
         this.callback = new WeakReference<>(callback);
     }
 
-    // TODO comment
+    /**
+     * Constructor used on the {@link MessageActivity}
+     * @param responseHandler   sent by the Activity. responsible to
+     *                          send Messages to the UI
+     */
     public WorkerThread(Handler responseHandler){
         super(TAG);
         this.responseHandler = new WeakReference<>(responseHandler);
@@ -274,7 +277,13 @@ public class WorkerThread extends HandlerThread {
         }
     }
 
-    //TODO comment
+    /**
+     * Download a bitmap using its url and
+     * send to the UI the image downloaded.
+     * The only difference with {@link #downloadImage(String)}
+     * is that it sends back the image to the UI
+     * using inside a Message
+     */
     private void downloadImageMSG(String urlStr){
         Log.d(TAG, "downloadImage()");
 
@@ -374,18 +383,6 @@ public class WorkerThread extends HandlerThread {
         }
     }
 
-    // TODO comment
-    private void showFeedbackOnUIMSG(final String msg) {
-        Log.d(TAG, "showFeedbackOnUI(" + msg + ")");
-        if ( checkResponse() ) {
-            sendMsgToUI(
-                    responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_FEEDBACK, msg)
-            );
-        } else {
-            Log.w(TAG, "responseHandler unavailable");
-        }
-    }
-
     /**
      * sends a feedback to the ui
      * posting a Runnable to the {@link #responseHandler}
@@ -401,28 +398,6 @@ public class WorkerThread extends HandlerThread {
                             callback.get().showOperation(msg);
                         }
                     }
-            );
-        } else {
-            Log.w(TAG, "responseHandler unavailable");
-        }
-    }
-
-    // TODO comment
-    private void sendMsgToUI(Message msg){
-        Log.d(TAG, "sendMsgToUI("+msg+")");
-        if (checkResponse()){
-            responseHandler.get().sendMessage(msg);
-        }
-    }
-
-    // TODO comment
-    private void showOperationOnUIMSG(final String msg) {
-        Log.d(TAG, "showOperationOnUIMSG(" + msg + ")");
-        if ( checkResponse() ) {
-            sendMsgToUI(
-                    responseHandler.get().obtainMessage(
-                            MessageActivity.KEY_MSG_FEEDBACK_OP, msg
-                    )
             );
         } else {
             Log.w(TAG, "responseHandler unavailable");
@@ -447,16 +422,6 @@ public class WorkerThread extends HandlerThread {
             );
         }
     }
-    // TODO comment
-    private void loadImageOnUIMSG(final Bitmap image){
-        Log.d(TAG, "loadImageOnUI("+image+")");
-        if (checkResponse() ) {
-            sendMsgToUI(
-                    responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_IMAGE, image)
-            );
-        }
-    }
-
     /**
      * Show progressBar on the UI.
      * It uses the {@link #responseHandler} to
@@ -478,16 +443,6 @@ public class WorkerThread extends HandlerThread {
         }
     }
 
-    // TODO comment
-    private void showProgressMSG(boolean show){
-        Log.d(TAG, "showProgressMSG()");
-        if ( checkResponse() ) {
-            sendMsgToUI(
-                    responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_PROGRESS, show)
-            );
-        }
-    }
-
     // Hide progressBar on the UI.
     // uses same logic as showProgress()
     private void hideProgress(){
@@ -500,6 +455,78 @@ public class WorkerThread extends HandlerThread {
                             callback.get().showProgress(false);
                         }
                     }
+            );
+        }
+    }
+
+
+
+    /**
+     * Sends Message to the UI using
+     * the {@link #responseHandler}
+     */
+    private void sendMsgToUI(Message msg){
+        Log.d(TAG, "sendMsgToUI("+msg+")");
+        if (checkResponse()){
+            responseHandler.get().sendMessage(msg);
+        }
+    }
+
+    /**
+     * sends a feedback to the ui
+     * sending a Message
+     */
+    private void showFeedbackOnUIMSG(final String msg) {
+        Log.d(TAG, "showFeedbackOnUI(" + msg + ")");
+        if ( checkResponse() ) {
+            sendMsgToUI(
+                    responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_FEEDBACK, msg)
+            );
+        } else {
+            Log.w(TAG, "responseHandler unavailable");
+        }
+    }
+
+    /**
+     * sends a feedback to the ui
+     * sending a Message to the {@link #responseHandler}
+     */
+    private void showOperationOnUIMSG(final String msg) {
+        Log.d(TAG, "showOperationOnUIMSG(" + msg + ")");
+        if ( checkResponse() ) {
+            sendMsgToUI(
+                    responseHandler.get().obtainMessage(
+                            MessageActivity.KEY_MSG_FEEDBACK_OP, msg
+                    )
+            );
+        } else {
+            Log.w(TAG, "responseHandler unavailable");
+        }
+    }
+
+    /**
+     * sends a Bitmap to the ui
+     * sending a Message to the {@link #responseHandler}
+     */
+    private void loadImageOnUIMSG(final Bitmap image){
+        Log.d(TAG, "loadImageOnUI("+image+")");
+        if (checkResponse() ) {
+            sendMsgToUI(
+                    responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_IMAGE, image)
+            );
+        }
+    }
+
+    /**
+     * Show/Hide progressBar on the UI.
+     * It uses the {@link #responseHandler} to
+     * send a Message on the UI
+     */
+    private void showProgressMSG(boolean show){
+        Log.d(TAG, "showProgressMSG()");
+        if ( checkResponse() ) {
+            sendMsgToUI(
+                    responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_PROGRESS, show)
             );
         }
     }

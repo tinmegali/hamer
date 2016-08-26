@@ -23,14 +23,13 @@ import com.tinmegali.hamer.util.BaseActivity;
  * It calls methods on the {@link WorkerThread} to download a image,
  * download a random image or start a count down counter.
  *
- * All those tasks are done on the {@link #workerThread} using
- * Message objects called asynchronously on the thread.
+ * All those tasks are done asynchronously on the {@link #workerThread}
+ * using Message objects called  on the thread.
  *
  * The results are sent back to the Activity using the {@link #uiHandler}
  * passed to the {@link WorkerThread} during its constructions or
- * after configuration changes. {@link Runnable} objects are posted
- * to the {@link #uiHandler} using the {@link com.tinmegali.hamer.WorkerThread.Callback}
- * implemented by the Activity
+ * after configuration changes. {@link Message} objects are send
+ * to the {@link #uiHandler} and processed by the {@link MessageHandler}
  */
 public class MessageActivity extends BaseActivity {
 
@@ -158,10 +157,10 @@ public class MessageActivity extends BaseActivity {
     }
 
     // Message identifier used on Message.what() field
-    public static final int KEY_MSG_FEEDBACK = 0;
+    public static final int KEY_MSG_FEEDBACK    = 0;
     public static final int KEY_MSG_FEEDBACK_OP = 1;
-    public static final int KEY_MSG_IMAGE = 2;
-    public static final int KEY_MSG_PROGRESS = 3;
+    public static final int KEY_MSG_IMAGE       = 2;
+    public static final int KEY_MSG_PROGRESS    = 3;
 
     /**
      * Handler responsible to manage communication
