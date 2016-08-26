@@ -106,9 +106,9 @@ public class WorkerThread extends HandlerThread {
     public void downloadWithMessage(){
         Log.d(TAG, "downloadWithMessage()");
         showOperationOnUI("Sending Message...");
-        HandlerMessage handlerMessage = new HandlerMessage(getLooper());
-        Message message = Message.obtain(handlerMessage, MSG_DOWNLOAD_IMG,imageBUrl);
-        handlerMessage.sendMessage(message);
+        HandlerImgDownload handlerImgDownload = new HandlerImgDownload(getLooper());
+        Message message = Message.obtain(handlerImgDownload, MSG_DOWNLOAD_IMG,imageBUrl);
+        handlerImgDownload.sendMessage(message);
     }
 
     // send a Message to the current Thread
@@ -116,13 +116,16 @@ public class WorkerThread extends HandlerThread {
     public void downloadRandomWithMessage(){
         Log.d(TAG, "downloadRandomWithMessage()");
         showOperationOnUI("Sending Message...");
-        HandlerMessage handlerMessage = new HandlerMessage(getLooper());
-        Message message = Message.obtain(handlerMessage, MSG_DOWNLOAD_RANDOM_IMG, imagesUrls);
-        handlerMessage.sendMessage(message);
+        HandlerImgDownload handlerImgDownload = new HandlerImgDownload(getLooper());
+        Message message = Message.obtain(handlerImgDownload, MSG_DOWNLOAD_RANDOM_IMG, imagesUrls);
+        handlerImgDownload.sendMessage(message);
     }
 
-    public class HandlerMessage extends Handler {
-        public HandlerMessage(Looper looper) {
+    /**
+     * Handler responsible to manage the Download image task
+     */
+    private class HandlerImgDownload extends Handler {
+        private HandlerImgDownload(Looper looper) {
             super(looper);
         }
 
@@ -174,6 +177,39 @@ public class WorkerThread extends HandlerThread {
         } finally {
             if ( connection != null )
                 connection.disconnect();
+        }
+    }
+
+    private CounterThread counterThread;
+    public void startTimer(long totalTime, long timeToTick){
+        Log.d(TAG, "startTimer("+totalTime+", "+timeToTick+")");
+        if ( counterThread == null ) {
+            counterThread = new CounterThread(new HandlerCounter());
+        } else {
+            counterThread.quit();
+        }
+        counterThread.startCounter(totalTime, timeToTick);
+    }
+
+    /**
+     * Handler responsible to manage the CountDownTimer.
+     */
+    private class HandlerCounter extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case CounterThread.KEY_MSG_TICK: {
+                    long time = (long) msg.obj;
+                    showFeedbackOnUI("Time remaining: " + Long.toString(time));
+                    showProgress();
+                    break;
+                }
+                case CounterThread.KEY_MSG_DONE: {
+                    showFeedbackOnUI("Time is done!");
+                    hideProgress();
+                    break;
+                }
+            }
         }
     }
 

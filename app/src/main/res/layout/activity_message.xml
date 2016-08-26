@@ -41,6 +41,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+    <Button
+            android:id="@+id/btn_3"
+            android:text="Start timer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
     <TextView
             android:id="@+id/feedback"
             android:text=""

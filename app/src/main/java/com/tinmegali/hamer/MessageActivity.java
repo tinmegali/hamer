@@ -34,8 +34,10 @@ public class MessageActivity extends RunnableActivity {
 
         Button btn = (Button) findViewById(R.id.btn_1);
         Button btn2 = (Button) findViewById(R.id.btn_2);
+        Button btn3 = (Button) findViewById(R.id.btn_3);
         btn.setOnClickListener(this);
         btn2.setOnClickListener(this);
+        btn3.setOnClickListener(this);
 
         startFragRetainer();
         recoverData();
@@ -101,6 +103,10 @@ public class MessageActivity extends RunnableActivity {
                 downloadRndImage();
                 break;
             }
+            case R.id.btn_3:{
+                startCounter();
+                break;
+            }
         }
     }
 
@@ -114,5 +120,11 @@ public class MessageActivity extends RunnableActivity {
         Log.d(TAG, "downloadRndImage()");
         initWorkerThread();
         workerThread.downloadRandomWithMessage();
+    }
+
+    private void startCounter(){
+        Log.d(TAG, "startCounter()");
+        initWorkerThread();
+        workerThread.startTimer(10000, 1000);
     }
 }
