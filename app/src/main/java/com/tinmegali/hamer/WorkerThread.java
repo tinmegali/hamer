@@ -139,7 +139,7 @@ public class WorkerThread extends HandlerThread {
     }
 
     /**
-     * post a Runnable to the WorkerThread.
+     * post a Runnable to the WorkerThread
      * Download a bitmap and sends the image
      * to the UI {@link RunnableActivity}
      * using the {@link #responseHandler} with
@@ -539,10 +539,6 @@ public class WorkerThread extends HandlerThread {
 
     /**
      * Interface to facilitate calls on the UI
-     * All activities that communicate with WorkerThread
-     * must implement this callback.
-     * The {@link #responseHandler} will use the callback
-     * methods to call tasks directly on the UI
      */
     public interface Callback {
         void showFeedbackText(String msg);

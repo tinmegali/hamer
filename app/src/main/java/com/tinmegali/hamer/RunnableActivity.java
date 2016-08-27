@@ -23,9 +23,9 @@ import com.tinmegali.hamer.util.RetainedFragment;
  * via {@link Handler}.
  *
  * calls a event {@link #downloadImgWithRunnable()}
- * who post a Runnable to the {@link #workerThread} using
- * and send back the image download to the Activity using
- * the {@link #uiHandler} give to the {@link #workerThread}
+ * who downloads a image on the {@link #workerThread}
+ * and send back the image to the Activity using
+ * the {@link #uiHandler} given to the {@link #workerThread}
  *
  * The Activity implement {@link com.tinmegali.hamer.WorkerThread.Callback}
  * a callback that gives UI methods to the UI Thread.
