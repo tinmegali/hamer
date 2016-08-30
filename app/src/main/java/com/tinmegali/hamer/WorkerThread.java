@@ -2,10 +2,7 @@ package com.tinmegali.hamer;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
-import android.os.Message;
+import android.os.*;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -13,6 +10,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
+import java.sql.Time;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.net.URL;
@@ -170,6 +170,57 @@ public class WorkerThread extends HandlerThread {
                 showOperationOnUI("Runnable operation ended");
             }
         });
+    }
+
+    /**
+     * show a Toast on the UI.
+     * schedules the task considering the current time.
+     * It could be scheduled at any time, we're
+     * using 5 seconds to facilitates the debugging
+     */
+    public void toastAtTime(){
+        Log.d(TAG, "toastAtTime(): current - " + Calendar.getInstance().toString());
+
+        // seconds to add on current time
+        int delaySeconds = 5;
+
+        // testing using a real date
+        Calendar scheduledDate = Calendar.getInstance();
+        // setting a future date considering the delay in seconds define
+        // we're using this approach just to facilitate the testing.
+        // it could be done using a user defined date also
+        scheduledDate.set(
+                scheduledDate.get(Calendar.YEAR),
+                scheduledDate.get(Calendar.MONTH),
+                scheduledDate.get(Calendar.DAY_OF_MONTH),
+                scheduledDate.get(Calendar.HOUR_OF_DAY),
+                scheduledDate.get(Calendar.MINUTE),
+                scheduledDate.get(Calendar.SECOND) + delaySeconds
+        );
+        Log.d(TAG, "toastAtTime(): scheduling at - " + scheduledDate.toString());
+        long scheduled = calculateUptimeMillis(scheduledDate);
+
+        // posting Runnable at specific time
+        postHandler.postAtTime(
+                new Runnable() {
+            @Override
+            public void run() {
+                callback.get().showToast(
+                        "Toast called using 'postAtTime()'."
+                );
+            }
+        }, scheduled);
+    }
+
+    /**
+     * Calculates the {@link SystemClock#uptimeMillis()} to
+     * a given Calendar date.
+     */
+    private long calculateUptimeMillis(Calendar calendar){
+        long time = calendar.getTimeInMillis();
+        long currentTime = Calendar.getInstance().getTimeInMillis();
+        long diff = time - currentTime;
+        return SystemClock.uptimeMillis() + diff;
     }
 
 
@@ -545,6 +596,7 @@ public class WorkerThread extends HandlerThread {
         void showOperation(String msg);
         void loadImage(Bitmap image);
         void showProgress(boolean show);
+        void showToast(String msg);
     }
 
 }

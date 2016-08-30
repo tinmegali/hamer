@@ -3,18 +3,12 @@ package com.tinmegali.hamer;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
 import com.tinmegali.hamer.util.BaseActivity;
-import com.tinmegali.hamer.util.RetainedFragment;
 
 /**
  * Activity that illustrates the use of posting {@link Runnable}
@@ -54,11 +48,13 @@ public class RunnableActivity extends BaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_runnable);
 
         initBasicUI();
         Button btn1 = (Button) findViewById(R.id.btn_1);
         btn1.setOnClickListener(this);
+        Button btn2 = (Button) findViewById(R.id.btn_2);
+        btn2.setOnClickListener(this);
 
         uiHandler = new Handler();
         startFragRetainer();
@@ -91,6 +87,10 @@ public class RunnableActivity extends BaseActivity
                 downloadImgWithRunnable();
                 break;
             }
+            case R.id.btn_2:{
+                toastAtTime();
+                break;
+            }
         }
     }
 
@@ -116,6 +116,16 @@ public class RunnableActivity extends BaseActivity
 
         initWorkerThread();
         workerThread.downloadWithRunnable();
+    }
+
+    /**
+     * Asks the {@link WorkerThread} to pop a Toast
+     * 5 seconds from current time
+     */
+    private void toastAtTime(){
+        Log.d(TAG, "toastAtTime()");
+        initWorkerThread();
+        workerThread.toastAtTime();
     }
 
     /**
@@ -159,5 +169,21 @@ public class RunnableActivity extends BaseActivity
             progressBar.setVisibility(View.VISIBLE);
         else
             progressBar.setVisibility(View.GONE);
+    }
+
+    /**
+     * Callback from {@link WorkerThread}
+     * Uses {@link #runOnUiThread(Runnable)} to illustrate
+     * such method
+     */
+    @Override
+    public void showToast(final String msg) {
+        Log.d(TAG, "showToast("+msg+")");
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

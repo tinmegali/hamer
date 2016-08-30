@@ -28,9 +28,26 @@
                 android:id="@+id/progressBar"/>
     </RelativeLayout>
 
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Initiates to download a Bitmap using a Runnable"
+    />
     <Button
             android:id="@+id/btn_1"
-            android:text="Post Runnable"
+            android:text="Download with Runnable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Pop a Toast 10 seconds from now. It uses current time as reference"
+    />
+    <Button
+            android:id="@+id/btn_2"
+            android:text="Toast at certain time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
