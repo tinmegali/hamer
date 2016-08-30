@@ -363,6 +363,40 @@ public class WorkerThread extends HandlerThread {
     }
 
     /**
+     * Show a Toast after a delayed time.
+     *
+     * send a Message with delayed time on the WorkerThread
+     * and sends a new Message to {@link MessageActivity}
+     * with a text after the message is processed
+     */
+    public void startMessageDelay(){
+        Log.d(TAG, "startMessageDelay()");
+
+        // message delay
+        long delay = 5000;
+        String msgText = "Hello from WorkerThread!";
+
+        // Handler responsible to send Message to WorkerThread
+        // using Handler.Callback() to avoid the need to extend the Handler class
+        Handler handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                responseHandler.get().sendMessage(
+                        responseHandler.get().obtainMessage(MessageActivity.KEY_MSG_TOAST, msg.obj)
+                );
+                return true;
+            }
+        });
+
+        // sending message
+        handler.sendMessageDelayed(
+                handler.obtainMessage(0,msgText),
+                delay
+        );
+
+    }
+
+    /**
      * Start a CountDownTimer on another background Thread.
      *
      * It shows how it is possible to communicate between

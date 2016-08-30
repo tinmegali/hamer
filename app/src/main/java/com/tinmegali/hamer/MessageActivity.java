@@ -11,10 +11,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.widget.*;
 import com.tinmegali.hamer.util.BaseActivity;
 
 /**
@@ -58,9 +55,11 @@ public class MessageActivity extends BaseActivity {
         Button btn = (Button) findViewById(R.id.btn_1);
         Button btn2 = (Button) findViewById(R.id.btn_2);
         Button btn3 = (Button) findViewById(R.id.btn_3);
+        Button btn4 = (Button) findViewById(R.id.btn_4);
         btn.setOnClickListener(this);
         btn2.setOnClickListener(this);
         btn3.setOnClickListener(this);
+        btn4.setOnClickListener(this);
 
         uiHandler = new MessageHandler();
         startFragRetainer();
@@ -118,6 +117,10 @@ public class MessageActivity extends BaseActivity {
                 startCounter();
                 break;
             }
+            case R.id.btn_4:{
+                startMessageDelay();
+                break;
+            }
         }
     }
 
@@ -156,11 +159,21 @@ public class MessageActivity extends BaseActivity {
         workerThread.startTimer(10000, 1000);
     }
 
+    /**
+     * send a Message with a delayed time
+     */
+    private void startMessageDelay(){
+        Log.d(TAG, "startMessageDelay()");
+        initWorkerThread();
+        workerThread.startMessageDelay();
+    }
+
     // Message identifier used on Message.what() field
     public static final int KEY_MSG_FEEDBACK    = 0;
     public static final int KEY_MSG_FEEDBACK_OP = 1;
     public static final int KEY_MSG_IMAGE       = 2;
     public static final int KEY_MSG_PROGRESS    = 3;
+    public static final int KEY_MSG_TOAST       = 4;
 
     /**
      * Handler responsible to manage communication
@@ -194,6 +207,13 @@ public class MessageActivity extends BaseActivity {
                         progressBar.setVisibility(View.VISIBLE);
                     else
                         progressBar.setVisibility(View.GONE);
+                    break;
+                }
+
+                // handle toast sent with a Message delay
+                case KEY_MSG_TOAST:{
+                    String msgText = (String)msg.obj;
+                    Toast.makeText(getApplicationContext(), msgText, Toast.LENGTH_LONG ).show();
                     break;
                 }
             }

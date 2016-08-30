@@ -29,21 +29,56 @@
 
     </RelativeLayout>
 
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=
+                    "Initiates to download a Bitmap using a Message"
+    />
     <Button
             android:id="@+id/btn_1"
             android:text="Download Image"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+
+    <TextView
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=
+                    "Initiates to download a random Bitmap using a Message"
+    />
     <Button
             android:id="@+id/btn_2"
             android:text="Download Random Image"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+
+    <TextView
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=
+                    "Starts a background Thread with a count down timer"
+    />
     <Button
             android:id="@+id/btn_3"
-            android:text="Start timer"
+            android:text="Start CountDownTimer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    <TextView
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=
+                    "Show a Toast with delayed Time"
+    />
+    <Button
+            android:id="@+id/btn_4"
+            android:text="SEND MESSAGE WITH DELAY"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
