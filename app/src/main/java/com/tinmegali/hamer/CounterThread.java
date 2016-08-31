@@ -67,13 +67,6 @@ public class CounterThread extends HandlerThread {
     private void sendTimerDone(){
         Log.d(TAG, "sendTimerDone()");
         responseHandler.sendMessage(getDoneMsg());
-
-        Thread thread =  new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-            }
-        });
     }
 
     /**
