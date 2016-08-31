@@ -10,9 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
-import java.sql.Time;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.net.URL;
@@ -29,7 +27,7 @@ import java.net.URL;
  * {@link #responseHandler} Handler received from the {@link MessageActivity} and {@link RunnableActivity}
  *                          responsible to post/send Runnable/Message on the UI.
  *
- * {@link #handlerImgDownload}  send and processes download Messages on the WorkerThread
+ * {@link #handlerMsgImgDownloader}  send and processes download Messages on the WorkerThread
  *
  * {@link #handlerCounter}  receive Messages from {@link CounterThread} with
  *                          'tick' and 'done' information
@@ -50,7 +48,7 @@ public class WorkerThread extends HandlerThread {
     private WeakReference<Handler> responseHandler;
 
     // send and processes download Messages on the WorkerThread
-    private HandlerImgDownload handlerImgDownload;
+    private HandlerMsgImgDownloader handlerMsgImgDownloader;
 
     // receive Messages from CounterThread with
     // 'tick' and 'done' information
@@ -228,37 +226,37 @@ public class WorkerThread extends HandlerThread {
 
     /**
      * Keys to identify the keys of {@link Message#what}
-     * from Messages send by the {@link #handlerImgDownload}
+     * from Messages send by the {@link #handlerMsgImgDownloader}
      */
     private final int MSG_DOWNLOAD_IMG = 0;         // msg that download a single img
     private final int MSG_DOWNLOAD_RANDOM_IMG = 1;  // msg that download random img
 
     /**
      * sends a Message to the current Thread
-     * using the {@link #handlerImgDownload}
+     * using the {@link #handlerMsgImgDownloader}
      * to download a single image.
      */
     public void downloadWithMessage(){
         Log.d(TAG, "downloadWithMessage()");
         showOperationOnUIMSG("Sending Message...");
-        if ( handlerImgDownload == null )
-            handlerImgDownload = new HandlerImgDownload(getLooper());
-        Message message = Message.obtain(handlerImgDownload, MSG_DOWNLOAD_IMG,imageBUrl);
-        handlerImgDownload.sendMessage(message);
+        if ( handlerMsgImgDownloader == null )
+            handlerMsgImgDownloader = new HandlerMsgImgDownloader(getLooper());
+        Message message = Message.obtain(handlerMsgImgDownloader, MSG_DOWNLOAD_IMG,imageBUrl);
+        handlerMsgImgDownloader.sendMessage(message);
     }
 
     /**
      * sends a Message to the current Thread
-     * using the {@link #handlerImgDownload}
+     * using the {@link #handlerMsgImgDownloader}
      * to download a random image.
      */
     public void downloadRandomWithMessage(){
         Log.d(TAG, "downloadRandomWithMessage()");
         showOperationOnUIMSG("Sending Message...");
-        if ( handlerImgDownload == null )
-            handlerImgDownload = new HandlerImgDownload(getLooper());
-        Message message = Message.obtain(handlerImgDownload, MSG_DOWNLOAD_RANDOM_IMG, imagesUrls);
-        handlerImgDownload.sendMessage(message);
+        if ( handlerMsgImgDownloader == null )
+            handlerMsgImgDownloader = new HandlerMsgImgDownloader(getLooper());
+        Message message = Message.obtain(handlerMsgImgDownloader, MSG_DOWNLOAD_RANDOM_IMG, imagesUrls);
+        handlerMsgImgDownloader.sendMessage(message);
     }
 
     /**
@@ -268,8 +266,8 @@ public class WorkerThread extends HandlerThread {
      *      {@link #MSG_DOWNLOAD_IMG} : single image
      *      {@link #MSG_DOWNLOAD_RANDOM_IMG} : random image
      */
-    private class HandlerImgDownload extends Handler {
-        private HandlerImgDownload(Looper looper) {
+    private class HandlerMsgImgDownloader extends Handler {
+        private HandlerMsgImgDownloader(Looper looper) {
             super(looper);
         }
 
@@ -335,7 +333,7 @@ public class WorkerThread extends HandlerThread {
      * send to the UI the image downloaded.
      * The only difference with {@link #downloadImage(String)}
      * is that it sends back the image to the UI
-     * using inside a Message
+     * using a Message
      */
     private void downloadImageMSG(String urlStr){
         Log.d(TAG, "downloadImage()");
