@@ -205,9 +205,11 @@ public class WorkerThread extends HandlerThread {
                 new Runnable() {
             @Override
             public void run() {
-                callback.get().showToast(
-                        "Toast called using 'postAtTime()'."
-                );
+                if ( callback != null ) {
+                    callback.get().showToast(
+                            "Toast called using 'postAtTime()'."
+                    );
+                }
             }
         }, scheduled);
     }
